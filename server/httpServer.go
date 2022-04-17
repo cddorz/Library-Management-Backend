@@ -26,9 +26,9 @@ func loginHandler(context *gin.Context) {
 	loginResult, userID := agent.AuthenticateUser(username, password)
 	if loginResult.Status == UserLoginOK {
 		token := util.GenToken(userID, util.UserKey)
-		context.JSON(http.StatusOK, gin.H{"status":loginResult.Status, "msg": loginResult.Msg, "token": token})
+		context.JSON(http.StatusOK, gin.H{"status": loginResult.Status, "msg": loginResult.Msg, "token": token})
 	} else {
-		context.JSON(http.StatusOK, gin.H{"status":loginResult.Status, "msg": loginResult.Msg})
+		context.JSON(http.StatusOK, gin.H{"status": loginResult.Status, "msg": loginResult.Msg})
 	}
 }
 
@@ -38,9 +38,9 @@ func adminLoginHandler(context *gin.Context) {
 	loginResult, userID := agent.AuthenticateAdmin(username, password)
 	if loginResult.Status == AdminLoginOK {
 		token := util.GenToken(userID, util.AdminKey)
-		context.JSON(http.StatusOK, gin.H{"status":loginResult.Status, "msg": loginResult.Msg, "token": token})
+		context.JSON(http.StatusOK, gin.H{"status": loginResult.Status, "msg": loginResult.Msg, "token": token})
 	} else {
-		context.JSON(http.StatusOK, gin.H{"status":loginResult.Status, "msg": loginResult.Msg, "token": ""})
+		context.JSON(http.StatusOK, gin.H{"status": loginResult.Status, "msg": loginResult.Msg, "token": ""})
 	}
 }
 
@@ -90,7 +90,7 @@ func borrowBookHandler(context *gin.Context) {
 	bookIDString := context.PostForm("bookID")
 	bookID, _ := strconv.Atoi(bookIDString)
 	result := agent.BorrowBook(userID, bookID)
-	context.JSON(http.StatusOK, gin.H{"status": result.Status , "msg": result.Msg})
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func returnBookHandler(context *gin.Context) {
@@ -99,7 +99,7 @@ func returnBookHandler(context *gin.Context) {
 	bookIDString := context.PostForm("bookID")
 	bookID, _ := strconv.Atoi(bookIDString)
 	result := agent.ReturnBook(userID, bookID)
-	context.JSON(http.StatusOK, gin.H{"status": result.Status , "msg": result.Msg})
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func updateBookStatusHandler(context *gin.Context) {
@@ -118,23 +118,23 @@ func updateBookStatusHandler(context *gin.Context) {
 	book.Language = bookStatusMap["language"]
 	book.Count, _ = strconv.Atoi(bookStatusMap["count"])
 	result := agent.UpdateBookStatus(book)
-	context.JSON(http.StatusOK, gin.H{"status": result.Status , "msg": result.Msg})
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func deleteBookHandler(context *gin.Context) {
-	bookID, err:= strconv.Atoi(context.PostForm("bookID"))
+	bookID, err := strconv.Atoi(context.PostForm("bookID"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 	result := agent.DeleteBook(bookID)
-	context.JSON(http.StatusOK, gin.H{"status": result.Status , "msg": result.Msg})
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func loadConfig(configPath string) {
 	Cfg, err := ini.Load(configPath)
-	if err != nil{
-		log.Fatal("Fail to Load config: ",err)
+	if err != nil {
+		log.Fatal("Fail to Load config: ", err)
 	}
 
 	server, err := Cfg.GetSection("server")
@@ -144,6 +144,7 @@ func loadConfig(configPath string) {
 	httpPort := server.Key("port").MustInt(80)
 	path := server.Key("path").MustString("")
 	staticPath := server.Key("staticPath").MustString("")
+	Jikeapikey = server.Key("JiKeAPIKey").MustString("")
 
 	mysql, err := Cfg.GetSection("mysql")
 	if err != nil {

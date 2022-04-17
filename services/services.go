@@ -3,7 +3,6 @@ package services
 import (
 	"database/sql"
 	"fmt"
-	goisbn "github.com/abx123/go-isbn"
 )
 
 type DBAgent struct {
@@ -313,24 +312,4 @@ func (agent DBAgent) DeleteBook(bookID int) *StatusResult {
 		result.Msg = "删除失败"
 		return result
 	}
-}
-
-func GetMetaDataByISBN(isbn string) (bookInfo Book, err error) {
-	bookInfo = Book{}
-	err = nil
-	isbnRetriever := goisbn.NewGoISBN(goisbn.DEFAULT_PROVIDERS)
-	rawBookInfo, rerr := isbnRetriever.Get(isbn)
-	if rerr != nil {
-		return Book{}, rerr
-	}
-	bookInfo.Isbn = isbn
-	var authors string
-	for _, subAuthor := range rawBookInfo.Authors {
-		authors += subAuthor
-	}
-	bookInfo.Author = authors
-	bookInfo.Language = rawBookInfo.Language
-	bookInfo.Name = rawBookInfo.Title
-
-	return bookInfo, nil
 }
