@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	goisbn "github.com/abx123/go-isbn"
 )
 
 type DBAgent struct {
@@ -10,28 +11,30 @@ type DBAgent struct {
 }
 
 type User struct {
-	UserID int `db:"id"`
+	UserID   int    `db:"id"`
 	Username string `db:"username"`
 	Password string `db:"password"`
 }
 
 type Book struct {
-	Id int `db:"id"`
-	Name string `db:"name"`
-	Author string `db:"author"`
-	Isbn string `db:"isbn"`
-	Address string `db:"address"`
+	Id       int    `db:"id"`
+	Name     string `db:"name"`
+	Author   string `db:"author"`
+	Isbn     string `db:"isbn"`
+	Address  string `db:"address"`
 	Language string `db:"language"`
-	Count int `db:"count"`
+	Count    int    `db:"count"`
+	Location string `db:"location"`
 }
 
 type StatusResult struct {
-	Code int
-	Msg string
+	Code   int
+	Msg    string
 	Status StatusCode
 }
 
 type StatusCode int
+
 const (
 	OK StatusCode = iota
 	Error
@@ -132,13 +135,15 @@ func (agent DBAgent) GetBookNum() int {
 	command := "SELECT COUNT(*) FROM book"
 	row, _ := agent.DB.Query(command)
 	count := 0
-	for row.Next() { count += 1 }
+	for row.Next() {
+		count += 1
+	}
 	return count
 }
 
 func (agent DBAgent) GetBooksByPage(page int) []Book {
 	// 1页10条
-	command := fmt.Sprintf("SELECT * FROM book limit %v,10;", page / 10)
+	command := fmt.Sprintf("SELECT * FROM book limit %v,10;", page/10)
 	row, err := agent.DB.Query(command)
 	books := make([]Book, 0, 10)
 	if err != nil {
@@ -146,7 +151,7 @@ func (agent DBAgent) GetBooksByPage(page int) []Book {
 		return books
 	}
 	for row.Next() {
-		book := Book {}
+		book := Book{}
 		err := row.Scan(&book.Id, &book.Name, &book.Author, &book.Isbn, &book.Address, &book.Language, &book.Count)
 		if err != nil {
 			return books
@@ -158,7 +163,7 @@ func (agent DBAgent) GetBooksByPage(page int) []Book {
 
 func (agent DBAgent) GetUserBooksByPage(userID int, page int) []Book {
 	// 1页10条
-	command := fmt.Sprintf("select a.* from book a inner join borrow b on a.id=b.book_id and b.user_id=%v limit %v,10;", userID, page / 10)
+	command := fmt.Sprintf("select a.* from book a inner join borrow b on a.id=b.book_id and b.user_id=%v limit %v,10;", userID, page/10)
 	row, err := agent.DB.Query(command)
 	books := make([]Book, 0, 10)
 	if err != nil {
@@ -215,7 +220,6 @@ func (agent DBAgent) BorrowBook(userID int, bookID int) *StatusResult {
 		return result
 	}
 
-
 }
 
 func (agent DBAgent) ReturnBook(userID int, bookID int) *StatusResult {
@@ -232,8 +236,8 @@ func (agent DBAgent) ReturnBook(userID int, bookID int) *StatusResult {
 
 	tx, _ := agent.DB.Begin()
 
-	ret1,_ := tx.Exec(fmt.Sprintf("delete from borrow where user_id=%v and book_id=%v limit 1",userID, bookID))
-	delNums,_ := ret1.RowsAffected()
+	ret1, _ := tx.Exec(fmt.Sprintf("delete from borrow where user_id=%v and book_id=%v limit 1", userID, bookID))
+	delNums, _ := ret1.RowsAffected()
 
 	ret2, _ := tx.Exec(fmt.Sprintf("UPDATE book set count=count+1 where id=%v", bookID))
 	updNums, _ := ret2.RowsAffected()
@@ -309,4 +313,24 @@ func (agent DBAgent) DeleteBook(bookID int) *StatusResult {
 		result.Msg = "删除失败"
 		return result
 	}
+}
+
+func GetMetaDataByISBN(isbn string) (bookInfo Book, err error) {
+	bookInfo = Book{}
+	err = nil
+	isbnRetriever := goisbn.NewGoISBN(goisbn.DEFAULT_PROVIDERS)
+	rawBookInfo, rerr := isbnRetriever.Get(isbn)
+	if rerr != nil {
+		return Book{}, rerr
+	}
+	bookInfo.Isbn = isbn
+	var authors string
+	for _, subAuthor := range rawBookInfo.Authors {
+		authors += subAuthor
+	}
+	bookInfo.Author = authors
+	bookInfo.Language = rawBookInfo.Language
+	bookInfo.Name = rawBookInfo.Title
+
+	return bookInfo, nil
 }
