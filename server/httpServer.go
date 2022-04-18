@@ -107,7 +107,7 @@ func updateBookStatusHandler(context *gin.Context) {
 	bookStatusMap := make(map[string]string)
 	err := json.Unmarshal([]byte(bookStatusString), &bookStatusMap)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 	book := new(Book)
 	book.Id, _ = strconv.Atoi(bookStatusMap["id"])
@@ -119,6 +119,21 @@ func updateBookStatusHandler(context *gin.Context) {
 	book.Count, _ = strconv.Atoi(bookStatusMap["count"])
 	result := agent.UpdateBookStatus(book)
 	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
+}
+
+func addBookHandler(context *gin.Context) {
+	paramString := context.PostForm("")
+	paramMap := make(map[string]string)
+	err := json.Unmarshal([]byte(paramString), paramMap)
+	if err != nil {
+		log.Println(err.Error())
+		context.JSON(http.StatusInternalServerError, gin.H{"status": UpdateFailed, "msg": "json unmarshal failure"})
+		return
+	}
+	var book Book
+	book, err = GetMetaDataByISBN(paramMap["isbn"])
+	book.Count, _ = strconv.Atoi(paramMap["count"])
+	book.Location = paramMap["location"]
 }
 
 func deleteBookHandler(context *gin.Context) {
@@ -189,6 +204,7 @@ func startService(port int, path string, staticPath string) {
 	{
 		g2.POST("/updateBookStatus", updateBookStatusHandler)
 		g2.POST("/deleteBook", deleteBookHandler)
+		g2.POST("/addBook", addBookHandler)
 	}
 
 	router.POST("/login", loginHandler)
