@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"time"
 )
 
 type DBAgent struct {
@@ -138,6 +139,26 @@ func (agent DBAgent) GetBookNum() int {
 		count += 1
 	}
 	return count
+}
+
+func (agent DBAgent) GetBorrowTime(bookId int) int {
+	command := fmt.Sprintf("select a.createtime from borrow a where a.book_id=%v;", bookId)
+	row, err := agent.DB.Query(command)
+	if err != nil {
+		return 0
+	}
+	var subTime time.Duration = 0
+	var creatTime time.Time
+	for row.Next() {
+		err = row.Scan(&creatTime)
+		currentTime := time.Now()
+		if err != nil {
+			fmt.Println(err.Error())
+			return 0
+		}
+		subTime = currentTime.Sub(creatTime)
+	}
+	return int(subTime.Hours() / 24)
 }
 
 func (agent DBAgent) GetBooksByPage(page int) []Book {

@@ -68,6 +68,19 @@ func getBooksHandler(context *gin.Context) {
 	_, _ = context.Writer.Write(bf.Bytes())
 }
 
+func getBorrowTimeHandler(context *gin.Context) {
+	bookIDString := context.PostForm("bookID")
+	bookID, _ := strconv.Atoi(bookIDString)
+	subTime := agent.GetBorrowTime(bookID)
+
+	bf := bytes.NewBuffer([]byte{})
+	encoder := json.NewEncoder(bf)
+	encoder.SetEscapeHTML(false)
+	_ = encoder.Encode(subTime)
+
+	_, _ = context.Writer.Write(bf.Bytes())
+}
+
 func getUserBooksHandler(context *gin.Context) {
 	iUserID, _ := context.Get("userID")
 	userID := iUserID.(int)
@@ -180,7 +193,7 @@ func loadConfig(configPath string) {
 	address := mysql.Key("address").MustString("")
 	tableName := mysql.Key("table").MustString("")
 
-	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v)/%v", username, password, address, tableName))
+	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v)/%v?parseTime=true", username, password, address, tableName))
 	if err != nil {
 		panic("connect to DB failed: " + err.Error())
 	}
@@ -200,11 +213,15 @@ func startService(port int, path string, staticPath string) {
 	router.GET("/", func(context *gin.Context) {
 		context.HTML(http.StatusOK, "index.html", nil)
 	})
+	//router.GET("/test", func(context *gin.Context) {
+	//	context.String(http.StatusOK, "test")
+	//})
 
 	g1 := router.Group("/")
 	g1.Use(middleware.UserAuth())
 	{
 		g1.POST("/getUserBooks", getUserBooksHandler)
+		g1.POST("/getBorrowTime", getBorrowTimeHandler)
 		g1.POST("/borrowBook", borrowBookHandler)
 		g1.POST("/returnBook", returnBookHandler)
 	}
@@ -216,7 +233,6 @@ func startService(port int, path string, staticPath string) {
 		g2.POST("/deleteBook", deleteBookHandler)
 		g2.POST("/addBook", addBookHandler)
 	}
-
 	router.POST("/login", loginHandler)
 	router.POST("/admin", adminLoginHandler)
 	router.POST("/register", registerHandler)
