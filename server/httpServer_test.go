@@ -22,6 +22,8 @@ func testingConnecttoDB() {
 	address := "192.168.1.105:3306"
 	tableName := "library_sys"
 
+	services.Jikeapikey = "12444.6076a457ef7282751a39cc00e90ab6ab.fc8577f5db168733c16e3fd2641ab4ce"
+
 	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v)/%v", username, password, address, tableName))
 	if err != nil {
 		panic("connect to DB failed: " + err.Error())

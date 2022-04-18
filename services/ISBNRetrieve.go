@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -30,12 +29,12 @@ type bookRetriveHTTPResult struct {
 	Data bookRetrieveResult `json:"Data"`
 }
 
-var plainProxyURL string = "127.0.0.1:6666"
-var proxyURL, _ = url.Parse(plainProxyURL)
+//var plainProxyURL string = "127.0.0.1:6666"
+//var proxyURL, _ = url.Parse(plainProxyURL)
 
 var myClient = &http.Client{
-	Timeout:   10 * time.Second,
-	Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)},
+	Timeout: 10 * time.Second,
+	//Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)},
 }
 
 func getJson(url string, target interface{}) error {
@@ -68,9 +67,6 @@ func GetMetaDataByISBN(isbn string) (bookInfo Book, err error) {
 		if ierr != nil {
 			return Book{}, ierr
 		}
-		log.Println(resp.Ret)
-		log.Println(resp.Msg)
-		log.Println(resp.Data)
 		//if resp.Ret != 0 {
 		//	return Book{}, errors.New("book cannot be retrieved, no result")
 		//}

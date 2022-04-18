@@ -122,15 +122,6 @@ func updateBookStatusHandler(context *gin.Context) {
 
 // /addbook?isbn=&count=&location=
 func addBookHandler(context *gin.Context) {
-
-	//paramString := context.PostForm("")
-	//paramMap := make(map[string]string)
-	//err := json.Unmarshal([]byte(paramString), paramMap)
-	//if err != nil {
-	//	log.Println(err.Error())
-	//	context.JSON(http.StatusInternalServerError, gin.H{"status": UpdateFailed, "msg": "json unmarshal failure"})
-	//	return
-	//}
 	isbn := context.PostForm("isbn")
 	count := context.PostForm("count")
 	location := context.PostForm("location")
@@ -144,12 +135,14 @@ func addBookHandler(context *gin.Context) {
 		book.Language = "Unknown"
 		book.Isbn = isbn
 	}
-	log.Printf(book.Name)
-	log.Println(book.Author)
-	log.Println(book.Language)
 	book.Count, _ = strconv.Atoi(count)
 	book.Location = location
 	result := agent.AddBook(&book)
+	if result.Status == UpdateOK {
+		log.Printf("Add Book %v (ISBN:%v) Successfully \n", book.Name, book.Isbn)
+	} else {
+		log.Printf("FAIL TO Add Book %v (ISBN:%v)  \n", book.Name, book.Isbn)
+	}
 	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 

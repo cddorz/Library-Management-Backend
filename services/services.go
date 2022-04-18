@@ -298,33 +298,49 @@ func (agent DBAgent) AddBook(newBook *Book) (result *StatusResult) {
 	result = new(StatusResult)
 	row := agent.DB.QueryRow(fmt.Sprintf("SELECT * FROM book WHERE book.isbn=%v", newBook.Isbn))
 	err := row.Scan()
+	// If Exists
+	if err == nil {
+		result.Status = UpdateFailed
+		result.Msg = "加入失败, 数据库内已有该isbn号的书"
+		return result
+	}
+
+	err = nil
+	transaction, err := agent.DB.Begin()
 	if err != nil {
-		err = nil
-		var ret sql.Result
-		ret, err = agent.DB.Exec(fmt.Sprintf("INSERT INTO "+
+		result.Status = UpdateFailed
+		result.Msg = "加入失败, 数据库语句出错，信息如下\n" + fmt.Sprintln(err.Error())
+		return result
+	}
+	var ret sql.Result
+	for i := 0; i < newBook.Count; i++ {
+		ret, err = transaction.Exec(fmt.Sprintf("INSERT INTO "+
 			"book(name, author, isbn , language, count, location) "+
 			"VALUES('%v','%v','%v','%v','%v','%v')",
 			newBook.Name, newBook.Author, newBook.Isbn, newBook.Language, newBook.Count, newBook.Location))
 		if err != nil {
 			result.Status = UpdateFailed
 			result.Msg = "加入失败, 数据库语句出错，信息如下\n" + fmt.Sprintln(err.Error())
+			err = transaction.Rollback()
+			if err != nil {
+				result.Msg += "回滚失败!信息如下\n" + fmt.Sprintln(err)
+			}
 			return result
 		}
-		if num, _ := ret.RowsAffected(); num > 0 {
-			result.Status = UpdateOK
-			result.Msg = "加入成功"
-			return result
-		} else {
+		if num, _ := ret.RowsAffected(); num <= 0 {
 			result.Status = UpdateFailed
 			result.Msg = "加入失败, Row affected为0"
+			err = transaction.Rollback()
+			if err != nil {
+				result.Msg += "回滚失败!信息如下\n" + fmt.Sprintln(err)
+			}
 			return result
 		}
-
-	} else {
-		result.Status = UpdateFailed
-		result.Msg = "加入失败, 数据库内已有该isbn号的书"
-		return result
 	}
+	transaction.Commit()
+	result.Status = UpdateOK
+	result.Msg = "加入成功"
+	return result
 }
 
 func (agent DBAgent) DeleteBook(bookID int) *StatusResult {
