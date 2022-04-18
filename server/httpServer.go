@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/go-ini/ini"
 	_ "github.com/go-sql-driver/mysql"
@@ -121,19 +120,37 @@ func updateBookStatusHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
+// /addbook?isbn=&count=&location=
 func addBookHandler(context *gin.Context) {
-	paramString := context.PostForm("")
-	paramMap := make(map[string]string)
-	err := json.Unmarshal([]byte(paramString), paramMap)
-	if err != nil {
-		log.Println(err.Error())
-		context.JSON(http.StatusInternalServerError, gin.H{"status": UpdateFailed, "msg": "json unmarshal failure"})
-		return
-	}
+
+	//paramString := context.PostForm("")
+	//paramMap := make(map[string]string)
+	//err := json.Unmarshal([]byte(paramString), paramMap)
+	//if err != nil {
+	//	log.Println(err.Error())
+	//	context.JSON(http.StatusInternalServerError, gin.H{"status": UpdateFailed, "msg": "json unmarshal failure"})
+	//	return
+	//}
+	isbn := context.PostForm("isbn")
+	count := context.PostForm("count")
+	location := context.PostForm("location")
 	var book Book
-	book, err = GetMetaDataByISBN(paramMap["isbn"])
-	book.Count, _ = strconv.Atoi(paramMap["count"])
-	book.Location = paramMap["location"]
+	var err error
+	book, err = GetMetaDataByISBN(isbn)
+	if err != nil {
+		log.Println("metadata retriever failure: " + err.Error())
+		book.Name = "Unknown"
+		book.Author = "Unknown"
+		book.Language = "Unknown"
+		book.Isbn = isbn
+	}
+	log.Printf(book.Name)
+	log.Println(book.Author)
+	log.Println(book.Language)
+	book.Count, _ = strconv.Atoi(count)
+	book.Location = location
+	result := agent.AddBook(&book)
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func deleteBookHandler(context *gin.Context) {
@@ -184,8 +201,8 @@ func startService(port int, path string, staticPath string) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	router.LoadHTMLFiles(fmt.Sprintf("%v/index.html", path))
-	router.Use(static.Serve("/static", static.LocalFile(staticPath, true)))
+	//router.LoadHTMLFiles(fmt.Sprintf("%v/index.html", path))
+	//router.Use(static.Serve("/static", static.LocalFile(staticPath, true)))
 
 	router.GET("/", func(context *gin.Context) {
 		context.HTML(http.StatusOK, "index.html", nil)
@@ -214,11 +231,14 @@ func startService(port int, path string, staticPath string) {
 	router.GET("/getBooks", getBooksHandler)
 	router.POST("/getBooks", getBooksHandler)
 
-	router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
+	//router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
 
 	err := router.Run(":" + strconv.Itoa(port))
 	if err != nil {
 		fmt.Println(err)
+		return
+	} else {
+		log.Println("running")
 		return
 	}
 }

@@ -289,15 +289,21 @@ func (agent DBAgent) UpdateBookStatus(newBook *Book) *StatusResult {
 }
 
 func (agent DBAgent) AddBook(newBook *Book) (result *StatusResult) {
+	if newBook == nil {
+		return &StatusResult{
+			Msg:    "parameter is a nil pointer",
+			Status: UpdateFailed,
+		}
+	}
 	result = new(StatusResult)
 	row := agent.DB.QueryRow(fmt.Sprintf("SELECT * FROM book WHERE book.isbn=%v", newBook.Isbn))
 	err := row.Scan()
 	if err != nil {
 		err = nil
 		var ret sql.Result
-		ret, err = agent.DB.Exec(fmt.Sprintf("INSERT INTO"+
-			"book((name, author, isbn , language, count, location)) "+
-			"VALUES(%v %v %v %v %v %v)",
+		ret, err = agent.DB.Exec(fmt.Sprintf("INSERT INTO "+
+			"book(name, author, isbn , language, count, location) "+
+			"VALUES('%v','%v','%v','%v','%v','%v')",
 			newBook.Name, newBook.Author, newBook.Isbn, newBook.Language, newBook.Count, newBook.Location))
 		if err != nil {
 			result.Status = UpdateFailed
@@ -319,7 +325,6 @@ func (agent DBAgent) AddBook(newBook *Book) (result *StatusResult) {
 		result.Msg = "加入失败, 数据库内已有该isbn号的书"
 		return result
 	}
-	return
 }
 
 func (agent DBAgent) DeleteBook(bookID int) *StatusResult {
