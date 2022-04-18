@@ -26,9 +26,9 @@ func loginHandler(context *gin.Context) {
 	loginResult, userID := agent.AuthenticateUser(username, password)
 	if loginResult.Status == UserLoginOK {
 		token := util.GenToken(userID, util.UserKey)
-		context.JSON(http.StatusOK, gin.H{"status":loginResult.Status, "msg": loginResult.Msg, "token": token})
+		context.JSON(http.StatusOK, gin.H{"status": loginResult.Status, "msg": loginResult.Msg, "token": token})
 	} else {
-		context.JSON(http.StatusOK, gin.H{"status":loginResult.Status, "msg": loginResult.Msg})
+		context.JSON(http.StatusOK, gin.H{"status": loginResult.Status, "msg": loginResult.Msg})
 	}
 }
 
@@ -38,9 +38,9 @@ func adminLoginHandler(context *gin.Context) {
 	loginResult, userID := agent.AuthenticateAdmin(username, password)
 	if loginResult.Status == AdminLoginOK {
 		token := util.GenToken(userID, util.AdminKey)
-		context.JSON(http.StatusOK, gin.H{"status":loginResult.Status, "msg": loginResult.Msg, "token": token})
+		context.JSON(http.StatusOK, gin.H{"status": loginResult.Status, "msg": loginResult.Msg, "token": token})
 	} else {
-		context.JSON(http.StatusOK, gin.H{"status":loginResult.Status, "msg": loginResult.Msg, "token": ""})
+		context.JSON(http.StatusOK, gin.H{"status": loginResult.Status, "msg": loginResult.Msg, "token": ""})
 	}
 }
 
@@ -69,6 +69,19 @@ func getBooksHandler(context *gin.Context) {
 	_, _ = context.Writer.Write(bf.Bytes())
 }
 
+func getBorrowTimeHandler(context *gin.Context) {
+	bookIDString := context.PostForm("bookID")
+	bookID, _ := strconv.Atoi(bookIDString)
+	subTime := agent.GetBorrowTime(bookID)
+
+	bf := bytes.NewBuffer([]byte{})
+	encoder := json.NewEncoder(bf)
+	encoder.SetEscapeHTML(false)
+	_ = encoder.Encode(subTime)
+
+	_, _ = context.Writer.Write(bf.Bytes())
+}
+
 func getUserBooksHandler(context *gin.Context) {
 	iUserID, _ := context.Get("userID")
 	userID := iUserID.(int)
@@ -90,7 +103,7 @@ func borrowBookHandler(context *gin.Context) {
 	bookIDString := context.PostForm("bookID")
 	bookID, _ := strconv.Atoi(bookIDString)
 	result := agent.BorrowBook(userID, bookID)
-	context.JSON(http.StatusOK, gin.H{"status": result.Status , "msg": result.Msg})
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func returnBookHandler(context *gin.Context) {
@@ -99,7 +112,7 @@ func returnBookHandler(context *gin.Context) {
 	bookIDString := context.PostForm("bookID")
 	bookID, _ := strconv.Atoi(bookIDString)
 	result := agent.ReturnBook(userID, bookID)
-	context.JSON(http.StatusOK, gin.H{"status": result.Status , "msg": result.Msg})
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func updateBookStatusHandler(context *gin.Context) {
@@ -118,23 +131,23 @@ func updateBookStatusHandler(context *gin.Context) {
 	book.Language = bookStatusMap["language"]
 	book.Count, _ = strconv.Atoi(bookStatusMap["count"])
 	result := agent.UpdateBookStatus(book)
-	context.JSON(http.StatusOK, gin.H{"status": result.Status , "msg": result.Msg})
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func deleteBookHandler(context *gin.Context) {
-	bookID, err:= strconv.Atoi(context.PostForm("bookID"))
+	bookID, err := strconv.Atoi(context.PostForm("bookID"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 	result := agent.DeleteBook(bookID)
-	context.JSON(http.StatusOK, gin.H{"status": result.Status , "msg": result.Msg})
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
 func loadConfig(configPath string) {
 	Cfg, err := ini.Load(configPath)
-	if err != nil{
-		log.Fatal("Fail to Load config: ",err)
+	if err != nil {
+		log.Fatal("Fail to Load config: ", err)
 	}
 
 	server, err := Cfg.GetSection("server")
@@ -154,7 +167,7 @@ func loadConfig(configPath string) {
 	address := mysql.Key("address").MustString("")
 	tableName := mysql.Key("table").MustString("")
 
-	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v)/%v", username, password, address, tableName))
+	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v)/%v?parseTime=true", username, password, address, tableName))
 	if err != nil {
 		panic("connect to DB failed: " + err.Error())
 	}
@@ -174,11 +187,15 @@ func startService(port int, path string, staticPath string) {
 	router.GET("/", func(context *gin.Context) {
 		context.HTML(http.StatusOK, "index.html", nil)
 	})
+	//router.GET("/test", func(context *gin.Context) {
+	//	context.String(http.StatusOK, "test")
+	//})
 
 	g1 := router.Group("/")
 	g1.Use(middleware.UserAuth())
 	{
 		g1.POST("/getUserBooks", getUserBooksHandler)
+		g1.POST("/getBorrowTime", getBorrowTimeHandler)
 		g1.POST("/borrowBook", borrowBookHandler)
 		g1.POST("/returnBook", returnBookHandler)
 	}
@@ -189,7 +206,6 @@ func startService(port int, path string, staticPath string) {
 		g2.POST("/updateBookStatus", updateBookStatusHandler)
 		g2.POST("/deleteBook", deleteBookHandler)
 	}
-
 	router.POST("/login", loginHandler)
 	router.POST("/admin", adminLoginHandler)
 	router.POST("/register", registerHandler)
