@@ -76,6 +76,28 @@ func (agent DBAgent) HasBook(isbn string, idOptional ...int) bool {
 	return true
 }
 
+func (agent *DBAgent) HasBookBarCode(id int, isbn string) *StatusResult {
+	var (
+		err   error
+		value int
+	)
+	row := agent.DB.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT * from book WHERE id='%v' AND isbn='%v');",
+		id, isbn))
+	err = row.Scan(&value)
+	if err != nil || value == 0 {
+		return &StatusResult{
+			Code:   0,
+			Msg:    "不存在该条目",
+			Status: BookBarcodeFailed,
+		}
+	}
+	return &StatusResult{
+		Code:   0,
+		Msg:    "存在该条目",
+		Status: BookBarcodeOK,
+	}
+}
+
 func EscapeForSQL(sql string) string {
 	dest := make([]byte, 0, 2*len(sql))
 	var escape byte
