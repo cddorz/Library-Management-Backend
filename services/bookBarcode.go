@@ -76,6 +76,47 @@ func (agent DBAgent) HasBook(isbn string, idOptional ...int) bool {
 	return true
 }
 
+func EscapeForSQL(sql string) string {
+	dest := make([]byte, 0, 2*len(sql))
+	var escape byte
+	for i := 0; i < len(sql); i++ {
+		c := sql[i]
+
+		escape = 0
+
+		switch c {
+		case 0: /* Must be escaped for 'mysql' */
+			escape = '0'
+			break
+		case '\n': /* Must be escaped for logs */
+			escape = 'n'
+			break
+		case '\r':
+			escape = 'r'
+			break
+		case '\\':
+			escape = '\\'
+			break
+		case '\'':
+			escape = '\''
+			break
+		case '"': /* Better safe than sorry */
+			escape = '"'
+			break
+		case '\032': //十进制26,八进制32,十六进制1a, /* This gives problems on Win32 */
+			escape = 'Z'
+		}
+
+		if escape != 0 {
+			dest = append(dest, '\\', escape)
+		} else {
+			dest = append(dest, c)
+		}
+	}
+
+	return string(dest)
+}
+
 func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 	// 首先检查 id以及isbn是否在数据库中
 	if !agent.HasBook(isbn, id) {
@@ -118,7 +159,7 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 
 	result, sqlerr := agent.DB.Exec(fmt.Sprintf(`INSERT INTO book_barcode(id,isbn,barcode_path) 
 			VALUES ('%v','%v','%v')`,
-		id, isbn, savePath))
+		id, isbn, EscapeForSQL(savePath)))
 	if sqlerr != nil {
 		return &StatusResult{
 			Msg:    "SQL存储失败: " + sqlerr.Error(),
