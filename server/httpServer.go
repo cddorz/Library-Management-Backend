@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/go-ini/ini"
 	_ "github.com/go-sql-driver/mysql"
@@ -120,7 +119,7 @@ func updateBookStatusHandler(context *gin.Context) {
 	bookStatusMap := make(map[string]string)
 	err := json.Unmarshal([]byte(bookStatusString), &bookStatusMap)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 	book := new(Book)
 	book.Id, _ = strconv.Atoi(bookStatusMap["id"])
@@ -131,6 +130,32 @@ func updateBookStatusHandler(context *gin.Context) {
 	book.Language = bookStatusMap["language"]
 	book.Count, _ = strconv.Atoi(bookStatusMap["count"])
 	result := agent.UpdateBookStatus(book)
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
+}
+
+// /addbook?isbn=&count=&location=
+func addBookHandler(context *gin.Context) {
+	isbn := context.PostForm("isbn")
+	count := context.PostForm("count")
+	location := context.PostForm("location")
+	var book Book
+	var err error
+	book, err = GetMetaDataByISBN(isbn)
+	if err != nil {
+		log.Println("metadata retriever failure: " + err.Error())
+		book.Name = "Unknown"
+		book.Author = "Unknown"
+		book.Language = "Unknown"
+		book.Isbn = isbn
+	}
+	book.Count, _ = strconv.Atoi(count)
+	book.Location = location
+	result := agent.AddBook(&book)
+	if result.Status == UpdateOK {
+		log.Printf("Add Book %v (ISBN:%v) Successfully \n", book.Name, book.Isbn)
+	} else {
+		log.Printf("FAIL TO Add Book %v (ISBN:%v)  \n", book.Name, book.Isbn)
+	}
 	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
@@ -157,6 +182,7 @@ func loadConfig(configPath string) {
 	httpPort := server.Key("port").MustInt(80)
 	path := server.Key("path").MustString("")
 	staticPath := server.Key("staticPath").MustString("")
+	Jikeapikey = server.Key("JiKeAPIKey").MustString("")
 
 	mysql, err := Cfg.GetSection("mysql")
 	if err != nil {
@@ -181,8 +207,8 @@ func startService(port int, path string, staticPath string) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	router.LoadHTMLFiles(fmt.Sprintf("%v/index.html", path))
-	router.Use(static.Serve("/static", static.LocalFile(staticPath, true)))
+	//router.LoadHTMLFiles(fmt.Sprintf("%v/index.html", path))
+	//router.Use(static.Serve("/static", static.LocalFile(staticPath, true)))
 
 	router.GET("/", func(context *gin.Context) {
 		context.HTML(http.StatusOK, "index.html", nil)
@@ -205,6 +231,7 @@ func startService(port int, path string, staticPath string) {
 	{
 		g2.POST("/updateBookStatus", updateBookStatusHandler)
 		g2.POST("/deleteBook", deleteBookHandler)
+		g2.POST("/addBook", addBookHandler)
 	}
 	router.POST("/login", loginHandler)
 	router.POST("/admin", adminLoginHandler)
@@ -213,11 +240,14 @@ func startService(port int, path string, staticPath string) {
 	router.GET("/getBooks", getBooksHandler)
 	router.POST("/getBooks", getBooksHandler)
 
-	router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
+	//router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
 
 	err := router.Run(":" + strconv.Itoa(port))
 	if err != nil {
 		fmt.Println(err)
+		return
+	} else {
+		log.Println("running")
 		return
 	}
 }
