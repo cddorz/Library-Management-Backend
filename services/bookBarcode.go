@@ -57,7 +57,34 @@ func subtitleBarcode(bc barcode.Barcode) image.Image {
 	return img
 }
 
+func (agent DBAgent) HasBook(isbn string, idOptional ...int) bool {
+	var (
+		err   error
+		value int
+	)
+	if len(idOptional) > 0 {
+		id := idOptional[0]
+		row := agent.DB.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT * from book WHERE id='%v' AND isbn='%v');", id, isbn))
+		err = row.Scan(&value)
+	} else {
+		row := agent.DB.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT * from book WHERE isbn='%v');", isbn))
+		err = row.Scan(&value)
+	}
+	if err != nil || value == 0 {
+		return false
+	}
+	return true
+}
+
 func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
+	// 首先检查 id以及isbn是否在数据库中
+	if !agent.HasBook(isbn, id) {
+		return &StatusResult{
+			Msg:    "数据库中不存在该书籍",
+			Status: BookBarcodeFailed,
+		}
+	}
+
 	codingMsg := fmt.Sprintf("%v-%v", isbn, id)
 	var code barcode.Barcode
 	var err error
@@ -70,20 +97,37 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 	}
 	code, err = barcode.Scale(code, 500, 100)
 	img := subtitleBarcode(code)
-	var pngfile *os.File
-	pngfile, err = os.Create(filepath.Join(mediaPath, fmt.Sprintf("%v.png", codingMsg)))
+	var pngFile *os.File
+	savePath := filepath.Join(mediaPath, fmt.Sprintf("%v.png", codingMsg))
+	pngFile, err = os.Create(savePath)
 	if err != nil {
 		return &StatusResult{
 			Msg:    "文件创建失败:" + err.Error(),
 			Status: BookBarcodeFailed,
 		}
 	}
-	defer pngfile.Close()
+	defer pngFile.Close()
 
-	err = png.Encode(pngfile, img)
+	err = png.Encode(pngFile, img)
 	if err != nil {
 		return &StatusResult{
 			Msg:    "png编码失败:" + err.Error(),
+			Status: BookBarcodeFailed,
+		}
+	}
+
+	result, sqlerr := agent.DB.Exec(fmt.Sprintf(`INSERT INTO book_barcode(id,isbn,barcode_path) 
+			VALUES ('%v','%v','%v')`,
+		id, isbn, savePath))
+	if sqlerr != nil {
+		return &StatusResult{
+			Msg:    "SQL存储失败: " + sqlerr.Error(),
+			Status: BookBarcodeFailed,
+		}
+	}
+	if noOfRow, temperr := result.RowsAffected(); temperr != nil || noOfRow <= 0 {
+		return &StatusResult{
+			Msg:    "SQL存储失败: " + temperr.Error(),
 			Status: BookBarcodeFailed,
 		}
 	}
