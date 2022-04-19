@@ -210,3 +210,27 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 		Status: BookBarcodeOK,
 	}
 }
+
+func (agent *DBAgent) GetBookBarcodePath(id int, isbn string) (*StatusResult, string) {
+	if !agent.HasBook(isbn, id) {
+		return &StatusResult{
+			Msg:    "数据库中不存在该书籍",
+			Status: BookBarcodeFailed,
+		}, ""
+	}
+	var barcode_path string
+	//因为至多只有一行所以用QueryRow了
+	row := agent.DB.QueryRow(fmt.Sprintf("SELECT barcode_path from book_barcode WHERE id='%v' AND isbn='%v';", id, isbn))
+	err := row.Scan(&barcode_path)
+	if err != nil {
+		return &StatusResult{
+			Msg:    "尚未为该书籍建立Barcode " + err.Error(),
+			Status: BookBarcodeFailed,
+		}, ""
+	}
+	return &StatusResult{
+		Msg:    "成功获取",
+		Status: BookBarcodeOK,
+	}, barcode_path
+
+}
