@@ -126,7 +126,10 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 		}
 	}
 
+	var value int
 	codingMsg := fmt.Sprintf("%v-%v", isbn, id)
+	savePath := filepath.Join(mediaPath, fmt.Sprintf("%v.png", codingMsg))
+
 	var code barcode.Barcode
 	var err error
 	code, err = code128.Encode(codingMsg)
@@ -139,7 +142,7 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 	code, err = barcode.Scale(code, 500, 100)
 	img := subtitleBarcode(code)
 	var pngFile *os.File
-	savePath := filepath.Join(mediaPath, fmt.Sprintf("%v.png", codingMsg))
+
 	pngFile, err = os.Create(savePath)
 	if err != nil {
 		return &StatusResult{
@@ -157,6 +160,36 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 		}
 	}
 
+	row := agent.DB.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT * from book WHERE isbn='%v');", isbn))
+	if temperr := row.Scan(&value); temperr == nil && value != 0 {
+		if temp, tempPath := agent.GetBookBarcodePath(id, isbn); temp.Status == BookBarcodeOK && tempPath == savePath {
+			return &StatusResult{
+				Msg:    "数据库中已经存在该书籍对应条形码",
+				Status: BookBarcodeOK,
+			}
+		} else {
+			result, sqlerr := agent.DB.Exec(fmt.Sprintf(`UPDATE book_barcode
+			SET barcode_path = '%v'
+			WHERE id='%v' AND isbn='%v';`,
+				EscapeForSQL(savePath), id, isbn))
+			if sqlerr != nil {
+				return &StatusResult{
+					Msg:    "SQL存储失败: " + sqlerr.Error(),
+					Status: BookBarcodeFailed,
+				}
+			}
+			if noOfRow, temperr := result.RowsAffected(); temperr != nil || noOfRow <= 0 {
+				return &StatusResult{
+					Msg:    "SQL存储失败: " + temperr.Error(),
+					Status: BookBarcodeFailed,
+				}
+			}
+			return &StatusResult{
+				Msg:    "编码成功",
+				Status: BookBarcodeOK,
+			}
+		}
+	}
 	result, sqlerr := agent.DB.Exec(fmt.Sprintf(`INSERT INTO book_barcode(id,isbn,barcode_path) 
 			VALUES ('%v','%v','%v')`,
 		id, isbn, EscapeForSQL(savePath)))
