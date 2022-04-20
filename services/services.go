@@ -58,7 +58,7 @@ const (
 )
 
 var (
-	mediaPath string
+	MediaPath string
 )
 
 func (agent DBAgent) AuthenticateAdmin(username string, password string) (*StatusResult, int) {

@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -136,11 +137,18 @@ func updateBookStatusHandler(context *gin.Context) {
 
 // /addbook?isbn=&count=&location=
 func addBookHandler(context *gin.Context) {
-	isbn := context.PostForm("isbn")
-	count := context.PostForm("count")
-	location := context.PostForm("location")
-	var book Book
 	var err error
+	bookStatusString := context.PostForm("bookStatus")
+	bookStatusMap := make(map[string]string)
+	err = json.Unmarshal([]byte(bookStatusString), &bookStatusMap)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	isbn := bookStatusMap["isbn"]
+	count := bookStatusMap["count"]
+	location := bookStatusMap["location"]
+	var book Book
+
 	book, err = GetMetaDataByISBN(isbn)
 	if err != nil {
 		log.Println("metadata retriever failure: " + err.Error())
@@ -224,6 +232,12 @@ func loadConfig(configPath string) {
 	}
 	agent.DB = db
 
+	MediaPath = filepath.Join(path, "media")
+
+	err = os.MkdirAll(MediaPath, os.ModePerm)
+	if err != nil {
+		log.Fatal("file system failed to create path: " + err.Error())
+	}
 	startService(httpPort, path, staticPath)
 
 }

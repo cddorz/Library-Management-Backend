@@ -1,4 +1,5 @@
 httpServer.exe
-.idea/
+.idea/*
 app.ini
 /lms_backend.exe
+vendor/*

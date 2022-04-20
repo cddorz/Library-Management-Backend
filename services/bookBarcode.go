@@ -152,7 +152,7 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 	}
 
 	codingMsg := fmt.Sprintf("%v-%v", isbn, id)
-	savePath := filepath.Join(mediaPath, fmt.Sprintf("%v.png", codingMsg))
+	savePath := filepath.Join(MediaPath, "bookBarcode", fmt.Sprintf("%v.png", codingMsg))
 
 	var code barcode.Barcode
 	var err error
@@ -192,7 +192,7 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 		}
 	}
 
-	if agent.HasBook(isbn, id) {
+	if agent.HasBookBarCode(id, isbn).Status != BookBarcodeOK {
 		// 判断是否路径相同,若相同则跳过,若不同则更新
 		var readPath string
 		qrow := agent.DB.QueryRow(fmt.Sprintf("SELECT barcode_path from book_barcode WHERE id='%v' AND isbn='%v';", id, isbn))
