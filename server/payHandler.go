@@ -38,7 +38,7 @@ func SignCheck(context *gin.Context) {
 }
 
 // AliPayHandlerMobile 手机网页支付
-// 传参示例http://127.0.0.1/pay?subject=fine&outtradeno=12340&totalamount=10
+// 传参示例http://127.0.0.1/pay/mobile?subject=fine&outtradeno=12340&totalamount=10
 func AliPayHandlerMobile(context *gin.Context) {
 	Cfg, err := ini.Load("app.ini")
 	if err != nil {
@@ -85,7 +85,7 @@ func AliPayHandlerMobile(context *gin.Context) {
 }
 
 // AliPayHandlerPC 电脑端网页支付
-// 传参示例http://127.0.0.1/pay?subject=fine&outtradeno=12340&totalamount=10
+// 传参示例http://127.0.0.1/pay/pc?subject=fine&outtradeno=12340&totalamount=10
 func AliPayHandlerPC(context *gin.Context) {
 	Cfg, err := ini.Load("app.ini")
 	if err != nil {
