@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/code128"
@@ -11,6 +12,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -143,12 +145,12 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 	// 首先检查 id以及isbn是否在数据库中
 	if !agent.HasBook(isbn, id) {
 		return &StatusResult{
+			Code:   0,
 			Msg:    "数据库中不存在该书籍",
 			Status: BookBarcodeFailed,
 		}
 	}
 
-	var value int
 	codingMsg := fmt.Sprintf("%v-%v", isbn, id)
 	savePath := filepath.Join(mediaPath, fmt.Sprintf("%v.png", codingMsg))
 
@@ -157,6 +159,7 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 	code, err = code128.Encode(codingMsg)
 	if err != nil {
 		return &StatusResult{
+			Code:   1,
 			Msg:    "编码失败",
 			Status: BookBarcodeFailed,
 		}
@@ -168,50 +171,80 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 	pngFile, err = os.Create(savePath)
 	if err != nil {
 		return &StatusResult{
+			Code:   2,
 			Msg:    "文件创建失败:" + err.Error(),
 			Status: BookBarcodeFailed,
 		}
 	}
-	defer pngFile.Close()
+	defer func() {
+		nerr := pngFile.Close()
+		if nerr != nil {
+			log.Println("FileSystem Error! " + nerr.Error())
+		}
+	}()
 
 	err = png.Encode(pngFile, img)
 	if err != nil {
 		return &StatusResult{
+			Code:   3,
 			Msg:    "png编码失败:" + err.Error(),
 			Status: BookBarcodeFailed,
 		}
 	}
 
-	row := agent.DB.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT * from book WHERE isbn='%v');", isbn))
-	if temperr := row.Scan(&value); temperr == nil && value != 0 {
-		if temp, tempPath := agent.GetBookBarcodePath(id, isbn); temp.Status == BookBarcodeOK && tempPath == savePath {
+	if agent.HasBook(isbn, id) {
+		// 判断是否路径相同,若相同则跳过,若不同则更新
+		var readPath string
+		qrow := agent.DB.QueryRow(fmt.Sprintf("SELECT barcode_path from book_barcode WHERE id='%v' AND isbn='%v';", id, isbn))
+		qerr := qrow.Scan(&readPath)
+
+		if qerr != nil {
 			return &StatusResult{
-				Msg:    "数据库中已经存在该书籍对应条形码",
-				Status: BookBarcodeOK,
+				Code:   4,
+				Msg:    "SQL存储失败: " + qerr.Error(),
+				Status: BookBarcodeFailed,
 			}
-		} else {
-			result, sqlerr := agent.DB.Exec(fmt.Sprintf(`UPDATE book_barcode
+		}
+		if readPath != savePath {
+			var result sql.Result
+			result, qerr = agent.DB.Exec(fmt.Sprintf(`UPDATE book_barcode
 			SET barcode_path = '%v'
 			WHERE id='%v' AND isbn='%v';`,
 				EscapeForSQL(savePath), id, isbn))
-			if sqlerr != nil {
+			if qerr != nil {
 				return &StatusResult{
-					Msg:    "SQL存储失败: " + sqlerr.Error(),
+					Code:   4,
+					Msg:    "SQL存储失败: " + qerr.Error(),
 					Status: BookBarcodeFailed,
 				}
 			}
 			if noOfRow, temperr := result.RowsAffected(); temperr != nil || noOfRow <= 0 {
-				return &StatusResult{
-					Msg:    "SQL存储失败: " + temperr.Error(),
-					Status: BookBarcodeFailed,
+				if temperr == nil {
+					return &StatusResult{
+						Msg:    "SQL存储失败: noOfRow<=0",
+						Status: BookBarcodeFailed,
+					}
+				} else {
+					return &StatusResult{
+						Msg:    "SQL存储失败: " + temperr.Error(),
+						Status: BookBarcodeFailed,
+					}
 				}
 			}
 			return &StatusResult{
+				Code:   0,
 				Msg:    "编码成功",
+				Status: BookBarcodeOK,
+			}
+		} else {
+			return &StatusResult{
+				Code:   1,
+				Msg:    "数据库中已经存在该书籍对应条形码",
 				Status: BookBarcodeOK,
 			}
 		}
 	}
+	// 没有相关条目,插入
 	result, sqlerr := agent.DB.Exec(fmt.Sprintf(`INSERT INTO book_barcode(id,isbn,barcode_path) 
 			VALUES ('%v','%v','%v')`,
 		id, isbn, EscapeForSQL(savePath)))
@@ -222,10 +255,18 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 		}
 	}
 	if noOfRow, temperr := result.RowsAffected(); temperr != nil || noOfRow <= 0 {
-		return &StatusResult{
-			Msg:    "SQL存储失败: " + temperr.Error(),
-			Status: BookBarcodeFailed,
+		if temperr == nil {
+			return &StatusResult{
+				Msg:    "SQL存储失败: noOfRow<=0",
+				Status: BookBarcodeFailed,
+			}
+		} else {
+			return &StatusResult{
+				Msg:    "SQL存储失败: " + temperr.Error(),
+				Status: BookBarcodeFailed,
+			}
 		}
+
 	}
 	return &StatusResult{
 		Msg:    "编码成功",
@@ -236,7 +277,7 @@ func (agent *DBAgent) AddBookBarcode(id int, isbn string) *StatusResult {
 func (agent *DBAgent) GetBookBarcodePath(id int, isbn string) (*StatusResult, string) {
 	if !agent.HasBook(isbn, id) {
 		return &StatusResult{
-			Msg:    "数据库中不存在该书籍",
+			Msg:    "Book is not found amid database",
 			Status: BookBarcodeFailed,
 		}, ""
 	}
@@ -245,13 +286,26 @@ func (agent *DBAgent) GetBookBarcodePath(id int, isbn string) (*StatusResult, st
 	row := agent.DB.QueryRow(fmt.Sprintf("SELECT barcode_path from book_barcode WHERE id='%v' AND isbn='%v';", id, isbn))
 	err := row.Scan(&barcode_path)
 	if err != nil {
-		return &StatusResult{
-			Msg:    "尚未为该书籍建立Barcode " + err.Error(),
-			Status: BookBarcodeFailed,
-		}, ""
+		if err == sql.ErrNoRows {
+			log.Println("Barcode of given book is not found ,attempting to add...")
+			result := agent.AddBookBarcode(id, isbn)
+			log.Println("[Testing]" + result.Msg)
+			if result.Status == BookBarcodeFailed {
+				return &StatusResult{
+					Msg:    "Tried adding bookBarcode But Failed, messages are shown below:\n" + result.Msg,
+					Status: BookBarcodeFailed,
+				}, ""
+			}
+			return agent.GetBookBarcodePath(id, isbn)
+		} else {
+			return &StatusResult{
+				Msg:    "SQL error " + err.Error(),
+				Status: BookBarcodeFailed,
+			}, ""
+		}
 	}
 	return &StatusResult{
-		Msg:    "成功获取",
+		Msg:    "Success",
 		Status: BookBarcodeOK,
 	}, barcode_path
 
