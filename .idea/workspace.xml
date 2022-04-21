@@ -1,25 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="BranchesTreeState">
-    <expand>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-    </expand>
-    <select />
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f809108a-1921-4486-bc49-f57b44597639" name="Default Changelist" comment="" />
+    <list default="true" id="f809108a-1921-4486-bc49-f57b44597639" name="Default Changelist" comment="1.ISBN检索器独立为文件&#10;2.ISBN检索器增加中文书籍检索，检索前填写极客API">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -32,12 +19,38 @@
       </list>
     </option>
   </component>
-  <component name="GOROOT" path="D:\Go" />
+  <component name="GOROOT" url="file://C:/Program Files/Go" />
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="master" />
+      </list>
+    </option>
+  </component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="5c5e3ffe-8701-4cd6-8f2e-498a9ce66386" />
+        <option name="url" value="git@github.com:2455DD/Library-Management-Backend.git" />
+      </UrlAndAccount>
+    </option>
   </component>
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectId" id="21RV2bMkedWLjvLHpRtgEKhgiUQ" />
   <component name="ProjectLevelVcsManager">
@@ -47,38 +60,101 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="DefaultGoTemplateProperty" value="Go File" />
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="configurable.Global.GOPATH.is.expanded" value="true" />
-    <property name="configurable.Module.GOPATH.is.expanded" value="false" />
-    <property name="configurable.Project.GOPATH.is.expanded" value="true" />
-    <property name="go.import.settings.migrated" value="true" />
-    <property name="go.sdk.automatically.set" value="true" />
-    <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="http.proxy" />
-  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.format.on.save.advertiser.fired&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.watchers.conflict.with.on.save.actions.check.performed&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;F:/Project/Library-Management-Backend&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;http.proxy&quot;
+  }
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\WorkSpace\go\lms\util" />
       <recent name="D:\WorkSpace\go\lms\services" />
     </key>
   </component>
-  <component name="RunManager">
-    <configuration name="go build httpServer.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Go 构建.go build lms/server">
+    <configuration name="go build lms/server" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="lms" />
       <working_directory value="$PROJECT_DIR$" />
-      <kind value="FILE" />
-      <filePath value="$PROJECT_DIR$/server/httpServer.go" />
-      <package value="lms" />
+      <kind value="PACKAGE" />
+      <package value="lms/server" />
       <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/server/httpServer.go" />
       <method v="2" />
     </configuration>
+    <configuration name="TestGetMetaDataByISBN in lms/services (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="lms" />
+      <working_directory value="$PROJECT_DIR$/services" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="lms/services" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetMetaDataByISBN\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGetMetaDataByISBN in lms/services (2)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="lms" />
+      <working_directory value="$PROJECT_DIR$/services" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="lms/services" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetMetaDataByISBN\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGetMetaDataByISBN in lms/services" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="lms" />
+      <working_directory value="$PROJECT_DIR$/services" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="lms/services" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetMetaDataByISBN\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGetMetaDataByISBN/available in lms/services" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="lms" />
+      <working_directory value="$PROJECT_DIR$/services" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="lms/services" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetMetaDataByISBN\E$/^\Qavailable\E$" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Go 构建.go build lms/server" />
+      <item itemvalue="Go 测试.TestGetMetaDataByISBN/available in lms/services" />
+      <item itemvalue="Go 测试.TestGetMetaDataByISBN in lms/services" />
+      <item itemvalue="Go 测试.TestGetMetaDataByISBN in lms/services (1)" />
+      <item itemvalue="Go 测试.TestGetMetaDataByISBN in lms/services (2)" />
+    </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Build.go build httpServer.go" />
+        <item itemvalue="Go 构建.go build lms/server" />
       </list>
     </recent_temporary>
   </component>
@@ -91,72 +167,35 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="feature_addbook" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
     </option>
-    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="add ISBN retriever" />
+    <MESSAGE value="1.ISBN检索器独立为文件" />
+    <MESSAGE value="1.ISBN检索器独立为文件&#10;2.ISBN检索器增加中文书籍检索，检索前填写极客API" />
+    <option name="LAST_COMMIT_MESSAGE" value="1.ISBN检索器独立为文件&#10;2.ISBN检索器增加中文书籍检索，检索前填写极客API" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="fix: 修改查看借阅时间bug" />
     <option name="LAST_COMMIT_MESSAGE" value="fix: 修改查看借阅时间bug" />
   </component>
   <component name="VgoProject">
-    <integration-enabled>true</integration-enabled>
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="511" y="327" key="#GOROOT" timestamp="1650164932441">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="511" y="327" key="#GOROOT/0.0.1536.824@0.0.1536.824" timestamp="1650164932441" />
-    <state width="1867" height="285" key="GridCell.Tab.0.bottom" timestamp="1650547223139">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1483" height="198" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1650286633206" />
-    <state width="1493" height="213" key="GridCell.Tab.0.bottom/0.0.1536.834@0.0.1536.834" timestamp="1649651439178" />
-    <state width="1867" height="285" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1650547223139" />
-    <state width="1867" height="285" key="GridCell.Tab.0.center" timestamp="1650547223139">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1483" height="198" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1650286633206" />
-    <state width="1493" height="213" key="GridCell.Tab.0.center/0.0.1536.834@0.0.1536.834" timestamp="1649651439178" />
-    <state width="1867" height="285" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1650547223139" />
-    <state width="1867" height="285" key="GridCell.Tab.0.left" timestamp="1650547223139">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1483" height="198" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1650286633206" />
-    <state width="1493" height="213" key="GridCell.Tab.0.left/0.0.1536.834@0.0.1536.834" timestamp="1649651439178" />
-    <state width="1867" height="285" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1650547223139" />
-    <state width="1867" height="285" key="GridCell.Tab.0.right" timestamp="1650547223139">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1483" height="198" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1650286633206" />
-    <state width="1493" height="213" key="GridCell.Tab.0.right/0.0.1536.834@0.0.1536.834" timestamp="1649651439178" />
-    <state width="1867" height="285" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1650547223139" />
-    <state width="1483" height="198" key="GridCell.Tab.1.bottom" timestamp="1650286635985">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state width="1483" height="198" key="GridCell.Tab.1.bottom/0.0.1536.824@0.0.1536.824" timestamp="1650286635985" />
-    <state width="1483" height="198" key="GridCell.Tab.1.center" timestamp="1650286635985">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state width="1483" height="198" key="GridCell.Tab.1.center/0.0.1536.824@0.0.1536.824" timestamp="1650286635985" />
-    <state width="1483" height="198" key="GridCell.Tab.1.left" timestamp="1650286635985">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state width="1483" height="198" key="GridCell.Tab.1.left/0.0.1536.824@0.0.1536.824" timestamp="1650286635985" />
-    <state width="1483" height="198" key="GridCell.Tab.1.right" timestamp="1650286635985">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state width="1483" height="198" key="GridCell.Tab.1.right/0.0.1536.824@0.0.1536.824" timestamp="1650286635985" />
-    <state x="543" y="308" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1650250873577">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="543" y="308" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1536.824@0.0.1536.824" timestamp="1650250873577" />
-    <state x="347" y="-1" key="search.everywhere.popup" timestamp="1650277539277">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="347" y="-1" key="search.everywhere.popup/0.0.1536.824@0.0.1536.824" timestamp="1650277539277" />
+    <settings-migrated>true</settings-migrated>
   </component>
 </project>

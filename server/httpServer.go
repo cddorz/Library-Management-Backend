@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/go-ini/ini"
 	_ "github.com/go-sql-driver/mysql"
@@ -15,6 +14,8 @@ import (
 	"lms/util"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -122,7 +123,7 @@ func updateBookStatusHandler(context *gin.Context) {
 	bookStatusMap := make(map[string]string)
 	err := json.Unmarshal([]byte(bookStatusString), &bookStatusMap)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 	book := new(Book)
 	book.Id, _ = strconv.Atoi(bookStatusMap["id"])
@@ -136,6 +137,39 @@ func updateBookStatusHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
+// /addbook?isbn=&count=&location=
+func addBookHandler(context *gin.Context) {
+	var err error
+	bookStatusString := context.PostForm("bookStatus")
+	bookStatusMap := make(map[string]string)
+	err = json.Unmarshal([]byte(bookStatusString), &bookStatusMap)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	isbn := bookStatusMap["isbn"]
+	count := bookStatusMap["count"]
+	location := bookStatusMap["location"]
+	var book Book
+
+	book, err = GetMetaDataByISBN(isbn)
+	if err != nil {
+		log.Println("metadata retriever failure: " + err.Error())
+		book.Name = "Unknown"
+		book.Author = "Unknown"
+		book.Language = "Unknown"
+		book.Isbn = isbn
+	}
+	book.Count, _ = strconv.Atoi(count)
+	book.Location = location
+	result := agent.AddBook(&book)
+	if result.Status == UpdateOK {
+		log.Printf("Add Book %v (ISBN:%v) Successfully \n", book.Name, book.Isbn)
+	} else {
+		log.Printf("FAIL TO Add Book %v (ISBN:%v)  \n", book.Name, book.Isbn)
+	}
+	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
+}
+
 func deleteBookHandler(context *gin.Context) {
 	bookID, err := strconv.Atoi(context.PostForm("bookID"))
 	if err != nil {
@@ -146,6 +180,30 @@ func deleteBookHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
+// ------Book BarCode Handle Section Start-------
+
+// GetBookBarimg Handler:
+// Method:GET param={id,isbn}
+func getBookBarcodeImageHandler(context *gin.Context) {
+	idString := context.Query("id")
+	id, _ := strconv.Atoi(idString)
+	isbn := context.Query("isbn")
+	result, path := agent.GetBookBarcodePath(id, isbn)
+	if result.Status == BookBarcodeFailed {
+		log.Println(result.Msg)
+		context.Data(http.StatusInternalServerError, "image/png", nil)
+		return
+	} else {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			log.Println(err.Error())
+			context.Data(http.StatusInternalServerError, "image/png", nil)
+		}
+		context.Data(http.StatusOK, "image/png", data)
+	}
+}
+
+// ------Book BarCode Handle Section End-------
 func loadConfig(configPath string) {
 	Cfg, err := ini.Load(configPath)
 	if err != nil {
@@ -159,6 +217,7 @@ func loadConfig(configPath string) {
 	httpPort := server.Key("port").MustInt(80)
 	path := server.Key("path").MustString("")
 	staticPath := server.Key("staticPath").MustString("")
+	Jikeapikey = server.Key("JiKeAPIKey").MustString("")
 
 	mysql, err := Cfg.GetSection("mysql")
 	if err != nil {
@@ -175,6 +234,12 @@ func loadConfig(configPath string) {
 	}
 	agent.DB = db
 
+	MediaPath = filepath.Join(path, "media")
+
+	err = os.MkdirAll(MediaPath, os.ModePerm)
+	if err != nil {
+		log.Fatal("file system failed to create path: " + err.Error())
+	}
 	startService(httpPort, path, staticPath)
 
 }
@@ -183,8 +248,8 @@ func startService(port int, path string, staticPath string) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	router.LoadHTMLFiles(fmt.Sprintf("%v/index.html", path))
-	router.Use(static.Serve("/static", static.LocalFile(staticPath, true)))
+	//router.LoadHTMLFiles(fmt.Sprintf("%v/index.html", path))
+	//router.Use(static.Serve("/static", static.LocalFile(staticPath, true)))
 
 	router.GET("/", func(context *gin.Context) {
 		context.HTML(http.StatusOK, "index.html", nil)
@@ -207,19 +272,31 @@ func startService(port int, path string, staticPath string) {
 	{
 		g2.POST("/updateBookStatus", updateBookStatusHandler)
 		g2.POST("/deleteBook", deleteBookHandler)
+		g2.POST("/addBook", addBookHandler)
 	}
+
 	router.POST("/login", loginHandler)
 	router.POST("/admin", adminLoginHandler)
 	router.POST("/register", registerHandler)
 	router.GET("/getCount", getCountHandler)
 	router.GET("/getBooks", getBooksHandler)
 	router.POST("/getBooks", getBooksHandler)
+	router.GET("/getBookBarcode", getBookBarcodeImageHandler)
 
-	router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
+	g3 := router.Group("/pay")
+	{
+		g3.GET("/mobile", AliPayHandlerMobile)
+		g3.GET("/pc", AliPayHandlerPC)
+		g3.GET("/signcheck", SignCheck)
+	}
+	//router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
 
 	err := router.Run(":" + strconv.Itoa(port))
 	if err != nil {
 		fmt.Println(err)
+		return
+	} else {
+		log.Println("running")
 		return
 	}
 }
