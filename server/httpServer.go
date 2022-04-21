@@ -240,6 +240,12 @@ func startService(port int, path string, staticPath string) {
 	router.GET("/getBooks", getBooksHandler)
 	router.POST("/getBooks", getBooksHandler)
 
+	g3 := router.Group("/pay")
+	{
+		g3.GET("/mobile", AliPayHandlerMobile)
+		g3.GET("/pc", AliPayHandlerPC)
+		g3.GET("/signcheck", SignCheck)
+	}
 	//router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
 
 	err := router.Run(":" + strconv.Itoa(port))
