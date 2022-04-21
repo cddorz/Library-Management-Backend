@@ -11,4 +11,6 @@ require (
 	github.com/go-playground/assert/v2 v2.0.1
 	github.com/go-sql-driver/mysql v1.6.0
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9
+	github.com/smartwalle/alipay/v3 v3.1.7
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 )
