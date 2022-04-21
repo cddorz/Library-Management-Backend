@@ -53,6 +53,12 @@ const (
 	UpdateOK
 	DeleteFailed
 	DeleteOK
+	BookBarcodeOK
+	BookBarcodeFailed
+)
+
+var (
+	MediaPath string
 )
 
 func (agent DBAgent) AuthenticateAdmin(username string, password string) (*StatusResult, int) {

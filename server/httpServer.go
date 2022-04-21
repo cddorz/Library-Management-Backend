@@ -14,6 +14,8 @@ import (
 	"lms/util"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -135,11 +137,18 @@ func updateBookStatusHandler(context *gin.Context) {
 
 // /addbook?isbn=&count=&location=
 func addBookHandler(context *gin.Context) {
-	isbn := context.PostForm("isbn")
-	count := context.PostForm("count")
-	location := context.PostForm("location")
-	var book Book
 	var err error
+	bookStatusString := context.PostForm("bookStatus")
+	bookStatusMap := make(map[string]string)
+	err = json.Unmarshal([]byte(bookStatusString), &bookStatusMap)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	isbn := bookStatusMap["isbn"]
+	count := bookStatusMap["count"]
+	location := bookStatusMap["location"]
+	var book Book
+
 	book, err = GetMetaDataByISBN(isbn)
 	if err != nil {
 		log.Println("metadata retriever failure: " + err.Error())
@@ -169,6 +178,30 @@ func deleteBookHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"status": result.Status, "msg": result.Msg})
 }
 
+// ------Book BarCode Handle Section Start-------
+
+// GetBookBarimg Handler:
+// Method:GET param={id,isbn}
+func getBookBarcodeImageHandler(context *gin.Context) {
+	idString := context.Query("id")
+	id, _ := strconv.Atoi(idString)
+	isbn := context.Query("isbn")
+	result, path := agent.GetBookBarcodePath(id, isbn)
+	if result.Status == BookBarcodeFailed {
+		log.Println(result.Msg)
+		context.Data(http.StatusInternalServerError, "image/png", nil)
+		return
+	} else {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			log.Println(err.Error())
+			context.Data(http.StatusInternalServerError, "image/png", nil)
+		}
+		context.Data(http.StatusOK, "image/png", data)
+	}
+}
+
+// ------Book BarCode Handle Section End-------
 func loadConfig(configPath string) {
 	Cfg, err := ini.Load(configPath)
 	if err != nil {
@@ -199,6 +232,12 @@ func loadConfig(configPath string) {
 	}
 	agent.DB = db
 
+	MediaPath = filepath.Join(path, "media")
+
+	err = os.MkdirAll(MediaPath, os.ModePerm)
+	if err != nil {
+		log.Fatal("file system failed to create path: " + err.Error())
+	}
 	startService(httpPort, path, staticPath)
 
 }
@@ -233,12 +272,14 @@ func startService(port int, path string, staticPath string) {
 		g2.POST("/deleteBook", deleteBookHandler)
 		g2.POST("/addBook", addBookHandler)
 	}
+
 	router.POST("/login", loginHandler)
 	router.POST("/admin", adminLoginHandler)
 	router.POST("/register", registerHandler)
 	router.GET("/getCount", getCountHandler)
 	router.GET("/getBooks", getBooksHandler)
 	router.POST("/getBooks", getBooksHandler)
+	router.GET("/getBookBarcode", getBookBarcodeImageHandler)
 
 	g3 := router.Group("/pay")
 	{

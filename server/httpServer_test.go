@@ -66,7 +66,7 @@ func dummyRouter() *gin.Engine {
 	router.GET("/getCount", getCountHandler)
 	router.GET("/getBooks", getBooksHandler)
 	router.POST("/getBooks", getBooksHandler)
-
+	router.Static("/media", "F:\\Project\\Library-Management\\media")
 	//router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
 
 	return router
@@ -105,7 +105,7 @@ func Test_addBookHandler(t *testing.T) {
 		t.Errorf("post error : " + err.Error())
 	}
 	req.ParseForm()
-	req.PostForm.Add("isbn", "9787510040535")
+	req.PostForm.Add("isbn", "9787302423287")
 	req.PostForm.Add("count", "3")
 	req.PostForm.Add("location", "2A")
 	router.ServeHTTP(w, req)
