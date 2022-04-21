@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/go-ini/ini"
 	_ "github.com/go-sql-driver/mysql"
@@ -72,7 +71,9 @@ func getBooksHandler(context *gin.Context) {
 func getBorrowTimeHandler(context *gin.Context) {
 	bookIDString := context.PostForm("bookID")
 	bookID, _ := strconv.Atoi(bookIDString)
-	subTime := agent.GetBorrowTime(bookID)
+	UserIDString := context.PostForm("userID")
+	userID, _ := strconv.Atoi(UserIDString)
+	subTime := agent.GetBorrowTime(bookID, userID)
 
 	bf := bytes.NewBuffer([]byte{})
 	encoder := json.NewEncoder(bf)
@@ -181,12 +182,12 @@ func startService(port int, path string, staticPath string) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	router.LoadHTMLFiles(fmt.Sprintf("%v/index.html", path))
-	router.Use(static.Serve("/static", static.LocalFile(staticPath, true)))
+	//router.LoadHTMLFiles(fmt.Sprintf("%v/index.html", path))
+	//router.Use(static.Serve("/static", static.LocalFile(staticPath, true)))
 
-	router.GET("/", func(context *gin.Context) {
-		context.HTML(http.StatusOK, "index.html", nil)
-	})
+	//router.GET("/", func(context *gin.Context) {
+	//	context.HTML(http.StatusOK, "index.html", nil)
+	//})
 	//router.GET("/test", func(context *gin.Context) {
 	//	context.String(http.StatusOK, "test")
 	//})
@@ -195,7 +196,7 @@ func startService(port int, path string, staticPath string) {
 	g1.Use(middleware.UserAuth())
 	{
 		g1.POST("/getUserBooks", getUserBooksHandler)
-		g1.POST("/getBorrowTime", getBorrowTimeHandler)
+		//g1.POST("/getBorrowTime", getBorrowTimeHandler)
 		g1.POST("/borrowBook", borrowBookHandler)
 		g1.POST("/returnBook", returnBookHandler)
 	}
@@ -206,6 +207,7 @@ func startService(port int, path string, staticPath string) {
 		g2.POST("/updateBookStatus", updateBookStatusHandler)
 		g2.POST("/deleteBook", deleteBookHandler)
 	}
+	router.POST("/getBorrowTime", getBorrowTimeHandler)
 	router.POST("/login", loginHandler)
 	router.POST("/admin", adminLoginHandler)
 	router.POST("/register", registerHandler)
@@ -213,7 +215,7 @@ func startService(port int, path string, staticPath string) {
 	router.GET("/getBooks", getBooksHandler)
 	router.POST("/getBooks", getBooksHandler)
 
-	router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
+	//router.StaticFile("/favicon.ico", fmt.Sprintf("%v/favicon.ico", staticPath))
 
 	err := router.Run(":" + strconv.Itoa(port))
 	if err != nil {
