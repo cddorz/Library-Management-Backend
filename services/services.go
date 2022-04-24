@@ -17,14 +17,15 @@ type User struct {
 }
 
 type Book struct {
-	Id       int    `db:"id"`
-	Name     string `db:"name"`
-	Author   string `db:"author"`
-	Isbn     string `db:"isbn"`
-	Address  string `db:"address"`
-	Language string `db:"language"`
-	Count    int    `db:"count"`
-	Location string `db:"location"`
+	Id         int    `db:"id"`
+	Name       string `db:"name"`
+	Author     string `db:"author"`
+	Isbn       string `db:"isbn"`
+	Address    string `db:"address"`
+	Language   string `db:"language"`
+	Count      int    `db:"count"`
+	Location   string `db:"location"`
+	BorrowTime int
 }
 
 type StatusResult struct {
@@ -198,10 +199,29 @@ func (agent DBAgent) GetUserBooksByPage(userID int, page int) []Book {
 	}
 	for row.Next() {
 		book := Book{}
-		err := row.Scan(&book.Id, &book.Name, &book.Author, &book.Isbn, &book.Address, &book.Language, &book.Count)
+		err := row.Scan(&book.Id, &book.Name, &book.Author, &book.Isbn, &book.Address, &book.Language, &book.Count, &book.Location)
 		if err != nil {
+			fmt.Println(err.Error())
 			return books
 		}
+		command := fmt.Sprintf("select a.createtime from borrow a where a.book_id=%v and a.user_id=%v;", book.Id, userID)
+		row, err := agent.DB.Query(command)
+		if err != nil {
+			fmt.Println(err.Error())
+			return books
+		}
+		var subTime time.Duration = 0
+		var creatTime time.Time
+		for row.Next() {
+			err = row.Scan(&creatTime)
+			currentTime := time.Now()
+			if err != nil {
+				fmt.Println(err.Error())
+				return books
+			}
+			subTime = currentTime.Sub(creatTime)
+		}
+		book.BorrowTime = int(subTime.Hours() / 24)
 		books = append(books, book)
 	}
 	return books

@@ -262,7 +262,6 @@ func startService(port int, path string, staticPath string) {
 	g1.Use(middleware.UserAuth())
 	{
 		g1.POST("/getUserBooks", getUserBooksHandler)
-		g1.POST("/getBorrowTime", getBorrowTimeHandler)
 		g1.POST("/borrowBook", borrowBookHandler)
 		g1.POST("/returnBook", returnBookHandler)
 	}
